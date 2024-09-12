@@ -30,7 +30,7 @@ install_tool() {
   rm -f "$binary_path" 2>/dev/null || true
 
   echo "Extracting archive"
-  tar xpf "$download_path" -C "$tmp_download_dir"
+  tar xzpf "$download_path" -C "$tmp_download_dir"
 
   echo "Copying binary"
   cp "$(get_binary_path_in_archive "${tmp_download_dir}" "${binary_name}" "${version}" "${platform}")" "${binary_path}"
@@ -46,8 +46,22 @@ get_binary_path_in_archive() {
   echo "$archive_dir/$binary_name"
 }
 
+get_arch() {
+  local arch; arch=$(uname -m | tr '[:upper:]' '[:lower:]')
+  case ${arch} in
+  x86_64)
+    arch='x86_64'
+    ;;
+  arm64)
+    arch='arm64'
+    ;;
+  esac
+
+  echo "${arch}"
+}
+
 get_platform() {
-  echo "$(uname)_x86_64"
+  echo "$(uname)_$(get_arch)"
 }
 
 get_filename() {
@@ -55,7 +69,7 @@ get_filename() {
   local platform="$2"
   local binary_name="$3"
 
-  echo "${binary_name}_${version/v/}_${platform}.tar.gz"
+  echo "${binary_name}_v${version}_${platform}.tar.gz"
 }
 
 # https://github.com/robscott/kube-capacity/releases/download/0.2.0/kube-capacity_0.2.0_Linux_x86_64.tar.gz
@@ -67,7 +81,7 @@ get_download_url() {
   local filename
   filename="$(get_filename "$version" "$platform" "$binary_name")"
 
-  echo "https://github.com/robscott/kube-capacity/releases/download/${version}/${filename}"
+  echo "https://github.com/robscott/kube-capacity/releases/download/v${version}/${filename}"
 }
 
 tmp_download_dir="$(mktemp -d -t 'asdf_XXXXXXXX')"
